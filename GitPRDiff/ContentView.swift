@@ -20,15 +20,19 @@ struct ContentView: View {
         request.setValue("application/vnd.github.VERSION.diff", forHTTPHeaderField: "Accept")
         request.httpMethod = "GET"
         
-        
         URLSession.shared.dataTask(with: request) { data, response, error in
-            
-        }
+            if let data = data {
+            let str = String(decoding: data, as: UTF8.self)
+            let myStrings = str.components(separatedBy: .newlines)
+            print(str)
+            }
+        }.resume()
         
     }
     var body: some View {
         Text("Hello, world!")
             .padding()
+            .onAppear(perform: loadData)
     }
 }
 

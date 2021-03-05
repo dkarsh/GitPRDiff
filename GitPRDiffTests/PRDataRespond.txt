@@ -1,0 +1,902 @@
+diff --git a/.travis.yml b/.travis.yml
+index 32435f9f..a7e0f09e 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -1,3 +1,3 @@
+ language: objective-c
+-osx_image: xcode7.2
++osx_image: xcode8.2
+ script: Support/Scripts/objc-build-scripts/cibuild
+diff --git a/Library/Categories/CoreData/NSManagedObject/NSManagedObject+MagicalRecord.m b/Library/Categories/CoreData/NSManagedObject/NSManagedObject+MagicalRecord.m
+index 240df7be..5d22f042 100644
+--- a/Library/Categories/CoreData/NSManagedObject/NSManagedObject+MagicalRecord.m
++++ b/Library/Categories/CoreData/NSManagedObject/NSManagedObject+MagicalRecord.m
+@@ -87,14 +87,8 @@ + (NSArray *)MR_executeFetchRequest:(NSFetchRequest *)request inContext:(NSManag
+         }
+     };
+ 
+-    if ([context concurrencyType] == NSConfinementConcurrencyType)
+-    {
+-        requestBlock();
+-    }
+-    else
+-    {
+-        [context performBlockAndWait:requestBlock];
+-    }
++    [context performBlockAndWait:requestBlock];
++
+     return results;
+ }
+ 
+@@ -134,20 +128,24 @@ + (instancetype)MR_createEntityInContext:(NSManagedObjectContext *)context
+ 
+ + (instancetype)MR_createEntityWithDescription:(NSEntityDescription *)entityDescription inContext:(NSManagedObjectContext *)context
+ {
+-    NSEntityDescription *entity = entityDescription;
++    __block NSManagedObject *managedObject;
+ 
+-    if (!entity)
+-    {
+-        entity = [self MR_entityDescriptionInContext:context];
+-    }
++    [context performBlockAndWait:^{
++        NSEntityDescription *entity = entityDescription;
+ 
+-    //    [NSEntityDescription insertNewObjectForEntityForName:[entity name] inManagedObjectContext:context];
+-    NSManagedObject *managedObject = [[self alloc] initWithEntity:entity insertIntoManagedObjectContext:context];
++        if (!entity)
++        {
++            entity = [self MR_entityDescriptionInContext:context];
++        }
+ 
+-    if ([managedObject respondsToSelector:@selector(MR_awakeFromCreation)])
+-    {
+-        [managedObject MR_awakeFromCreation];
+-    }
++        //    [NSEntityDescription insertNewObjectForEntityForName:[entity name] inManagedObjectContext:context];
++        managedObject = [[self alloc] initWithEntity:entity insertIntoManagedObjectContext:context];
++
++        if ([managedObject respondsToSelector:@selector(MR_awakeFromCreation)])
++        {
++            [managedObject MR_awakeFromCreation];
++        }
++    }];
+ 
+     return managedObject;
+ }
+diff --git a/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalObserving.h b/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalObserving.h
+index 909a2342..7802bed7 100644
+--- a/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalObserving.h
++++ b/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalObserving.h
+@@ -83,6 +83,8 @@ extern NSString *__nonnull const MagicalRecordDidMergeChangesFromiCloudNotificat
+ 
+ @interface NSManagedObjectContext (MagicalObservingDeprecated)
+ 
++- (void)MR_performBlock:(void (^)(void))block MR_DEPRECATED_IN_3_0_PLEASE_USE("performBlock:");
++- (void)MR_performBlockAndWait:(void (^)(void))block MR_DEPRECATED_IN_3_0_PLEASE_USE("performBlockAndWait:");
+ - (void)MR_observeContext:(NSManagedObjectContext *)otherContext MR_DEPRECATED_IN_3_0_PLEASE_USE("MR_observeContextDidSave:");
+ - (void)MR_stopObservingContext:(NSManagedObjectContext *)otherContext MR_DEPRECATED_IN_3_0_PLEASE_USE("MR_stopObservingContextDidSave");
+ 
+diff --git a/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalObserving.m b/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalObserving.m
+index 8ed2d786..18d7126e 100644
+--- a/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalObserving.m
++++ b/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalObserving.m
+@@ -15,30 +15,6 @@
+ 
+ @implementation NSManagedObjectContext (MagicalObserving)
+ 
+-- (void)MR_performBlock:(void (^)(void))block
+-{
+-    if ([self concurrencyType] == NSConfinementConcurrencyType)
+-    {
+-        block();
+-    }
+-    else
+-    {
+-        [self performBlock:block];
+-    }
+-}
+-
+-- (void)MR_performBlockAndWait:(void (^)(void))block
+-{
+-    if ([self concurrencyType] == NSConfinementConcurrencyType)
+-    {
+-        block();
+-    }
+-    else
+-    {
+-        [self performBlockAndWait:block];
+-    }
+-}
+-
+ #pragma mark - Context Observation Helpers
+ 
+ - (void)MR_observeContextDidSave:(NSManagedObjectContext *)otherContext
+@@ -112,7 +88,7 @@ - (void)MR_mergeChangesFromiCloud:(NSNotification *)notification
+                                           object:self
+                                         userInfo:[notification userInfo]];
+     };
+-    [self MR_performBlock:mergeBlock];
++    [self performBlock:mergeBlock];
+ }
+ 
+ - (void)MR_mergeChangesFromNotification:(NSNotification *)notification
+@@ -129,7 +105,7 @@ - (void)MR_mergeChangesFromNotification:(NSNotification *)notification
+         [self mergeChangesFromContextDidSaveNotification:notification];
+     };
+ 
+-    [self MR_performBlock:mergeBlock];
++    [self performBlock:mergeBlock];
+ }
+ 
+ - (void)MR_mergeChangesOnMainThread:(NSNotification *)notification
+@@ -168,6 +144,16 @@ - (void)MR_stopObservingiCloudChangesInCoordinator:(NSPersistentStoreCoordinator
+ #pragma mark - Deprecated Methods — DO NOT USE
+ @implementation NSManagedObjectContext (MagicalObservingDeprecated)
+ 
++- (void)MR_performBlock:(void (^)(void))block
++{
++    [self performBlock:block];
++}
++
++- (void)MR_performBlockAndWait:(void (^)(void))block
++{
++    [self performBlockAndWait:block];
++}
++
+ - (void)MR_observeContext:(NSManagedObjectContext *)otherContext
+ {
+     [self MR_observeContextDidSave:otherContext];
+diff --git a/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalRecord.h b/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalRecord.h
+index fcb7812b..489d0fa5 100644
+--- a/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalRecord.h
++++ b/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalRecord.h
+@@ -18,9 +18,6 @@ extern NSString *const MagicalRecordDidMergeChangesFromiCloudNotification;
+ + (NSManagedObjectContext *)MR_mainQueueContext;
+ + (NSManagedObjectContext *)MR_privateQueueContext;
+ 
+-+ (NSManagedObjectContext *)MR_confinementContext;
+-+ (NSManagedObjectContext *)MR_confinementContextWithParent:(NSManagedObjectContext *)parentContext;
+-
+ + (NSManagedObjectContext *)MR_privateQueueContextWithStoreCoordinator:(NSPersistentStoreCoordinator *)coordinator NS_RETURNS_RETAINED;
+ 
+ - (NSString *)MR_description;
+diff --git a/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalRecord.m b/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalRecord.m
+index eea52b69..6a7c8122 100644
+--- a/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalRecord.m
++++ b/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalRecord.m
+@@ -21,10 +21,6 @@
+     {
+         return @"Main Queue";
+     }
+-    if (type == NSConfinementConcurrencyType)
+-    {
+-        return @"Confinement";
+-    }
+ 
+     return @"Unknown Concurrency";
+ }
+@@ -74,20 +70,6 @@ + (NSManagedObjectContext *)MR_context
+     return [self MR_privateQueueContext];
+ }
+ 
+-+ (NSManagedObjectContext *)MR_confinementContext
+-{
+-    NSManagedObjectContext *context = [[self alloc] initWithConcurrencyType:NSConfinementConcurrencyType];
+-    [context MR_setWorkingName:@"Confinement"];
+-    return context;
+-}
+-
+-+ (NSManagedObjectContext *)MR_confinementContextWithParent:(NSManagedObjectContext *)parentContext
+-{
+-    NSManagedObjectContext *context = [self MR_confinementContext];
+-    [context setParentContext:parentContext];
+-    return context;
+-}
+-
+ + (NSManagedObjectContext *)MR_mainQueueContext
+ {
+     NSManagedObjectContext *context = [[self alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+@@ -120,13 +102,15 @@ + (NSManagedObjectContext *)MR_privateQueueContextWithStoreCoordinator:(NSPersis
+ 
+ - (void)MR_setWorkingName:(NSString *)workingName
+ {
+-    [[self userInfo] setObject:workingName forKey:kMagicalRecordNSManagedObjectContextWorkingName];
++    [self performBlockAndWait:^{
++        self.userInfo[kMagicalRecordNSManagedObjectContextWorkingName] = workingName;
++    }];
+ }
+ 
+ - (NSString *)MR_workingName
+ {
+-    NSString *workingName = [[self userInfo] objectForKey:kMagicalRecordNSManagedObjectContextWorkingName];
+-    if ([workingName length] == 0)
++    NSString *workingName = self.userInfo[kMagicalRecordNSManagedObjectContextWorkingName];
++    if (workingName.length == 0)
+     {
+         workingName = @"UNNAMED";
+     }
+diff --git a/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalSaves.m b/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalSaves.m
+index 05cae3a8..c64cce8c 100644
+--- a/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalSaves.m
++++ b/Library/Categories/CoreData/NSManagedObjectContext/NSManagedObjectContext+MagicalSaves.m
+@@ -92,16 +92,9 @@ - (void)MR_saveWithOptions:(MRContextSaveOptions)saveOptions completion:(MRSaveC
+ 
+     __block BOOL hasChanges = NO;
+ 
+-    if ([self concurrencyType] == NSConfinementConcurrencyType)
+-    {
++    [self performBlockAndWait:^{
+         hasChanges = [self hasChanges];
+-    }
+-    else
+-    {
+-        [self performBlockAndWait:^{
+-            hasChanges = [self hasChanges];
+-        }];
+-    }
++    }];
+ 
+     if (!hasChanges)
+     {
+@@ -182,11 +175,7 @@ - (void)MR_saveWithOptions:(MRContextSaveOptions)saveOptions completion:(MRSaveC
+         }
+     };
+ 
+-    if ([self concurrencyType] == NSConfinementConcurrencyType)
+-    {
+-        saveBlock();
+-    }
+-    else if (YES == saveSynchronously)
++    if (YES == saveSynchronously)
+     {
+         [self performBlockAndWait:saveBlock];
+     }
+diff --git a/Library/MagicalMigrationManager.m b/Library/MagicalMigrationManager.m
+index 12b9e41e..1114b390 100644
+--- a/Library/MagicalMigrationManager.m
++++ b/Library/MagicalMigrationManager.m
+@@ -109,6 +109,7 @@ - (BOOL)MagicalMigrationManager_progressivelyMigrateStoreAtURL:(NSURL *)sourceSt
+     NSManagedObjectModel *targetModel = [self targetModel];
+     NSDictionary *sourceMetadata = [NSPersistentStoreCoordinator metadataForPersistentStoreOfType:type
+                                                                                               URL:sourceStoreURL
++                                                                                          options:nil
+                                                                                             error:error];
+ 
+     if (nil == sourceMetadata)
+diff --git a/Library/MagicalRecord.h b/Library/MagicalRecord.h
+index 60b325d9..5ea2e2b9 100644
+--- a/Library/MagicalRecord.h
++++ b/Library/MagicalRecord.h
+@@ -34,6 +34,7 @@
+ 
+ #import "NSManagedObject+MagicalRecord.h"
+ #import "NSManagedObject+MagicalRequests.h"
++#import "NSManagedObject+MagicalFetching.h"
+ #import "NSManagedObject+MagicalFinders.h"
+ #import "NSManagedObject+MagicalAggregation.h"
+ #import "NSManagedObjectContext+MagicalRecord.h"
+diff --git a/Library/MagicalRecordStack/ClassicSQLiteMagicalRecordStack.m b/Library/MagicalRecordStack/ClassicSQLiteMagicalRecordStack.m
+index 90d4a48d..afda9577 100644
+--- a/Library/MagicalRecordStack/ClassicSQLiteMagicalRecordStack.m
++++ b/Library/MagicalRecordStack/ClassicSQLiteMagicalRecordStack.m
+@@ -13,9 +13,9 @@
+ 
+ @implementation ClassicSQLiteMagicalRecordStack
+ 
+-- (NSManagedObjectContext *)newConfinementContext
++- (NSManagedObjectContext *)newPrivateContext
+ {
+-    NSManagedObjectContext *context = [NSManagedObjectContext MR_confinementContext];
++    NSManagedObjectContext *context = [NSManagedObjectContext MR_privateQueueContext];
+     [context setPersistentStoreCoordinator:self.coordinator];
+     [context setMergePolicy:NSMergeByPropertyStoreTrumpMergePolicy];
+ 
+@@ -33,7 +33,7 @@ - (void)saveWithBlock:(void (^)(NSManagedObjectContext *))block identifier:(NSSt
+     dispatch_async(MR_saveQueue(), ^{
+         MRLogVerbose(@"%@ save starting", contextWorkingName);
+ 
+-        NSManagedObjectContext *localContext = [self newConfinementContext];
++        NSManagedObjectContext *localContext = [self newPrivateContext];
+         NSManagedObjectContext *mainContext = [self context];
+ 
+         [mainContext MR_observeContextDidSave:localContext];
+diff --git a/Library/MagicalRecordStack/ClassicWithBackgroundCoordinatorSQLiteMagicalRecordStack.m b/Library/MagicalRecordStack/ClassicWithBackgroundCoordinatorSQLiteMagicalRecordStack.m
+index 287570a7..efaeb66f 100644
+--- a/Library/MagicalRecordStack/ClassicWithBackgroundCoordinatorSQLiteMagicalRecordStack.m
++++ b/Library/MagicalRecordStack/ClassicWithBackgroundCoordinatorSQLiteMagicalRecordStack.m
+@@ -37,10 +37,10 @@ - (void)reset
+     [super reset];
+ }
+ 
+-- (NSManagedObjectContext *)newConfinementContext
++- (NSManagedObjectContext *)newPrivateContext
+ {
+     //TODO: need to setup backgroundContext -> context merges via NSNC, and unsubscribe automatically
+-    NSManagedObjectContext *backgroundContext = [NSManagedObjectContext MR_confinementContext];
++    NSManagedObjectContext *backgroundContext = [NSManagedObjectContext MR_privateQueueContext];
+     [backgroundContext setPersistentStoreCoordinator:self.backgroundCoordinator];
+     return backgroundContext;
+ }
+diff --git a/Library/MagicalRecordStack/InMemoryMagicalRecordStack.m b/Library/MagicalRecordStack/InMemoryMagicalRecordStack.m
+index 077664db..90c57678 100644
+--- a/Library/MagicalRecordStack/InMemoryMagicalRecordStack.m
++++ b/Library/MagicalRecordStack/InMemoryMagicalRecordStack.m
+@@ -8,14 +8,16 @@
+ 
+ #import "MagicalRecordStack+Private.h"
+ #import "InMemoryMagicalRecordStack.h"
++#import "NSManagedObjectContext+MagicalRecord.h"
+ #import "NSPersistentStoreCoordinator+MagicalInMemoryStoreAdditions.h"
+ 
+ @implementation InMemoryMagicalRecordStack
+ 
+-- (NSManagedObjectContext *)newConfinementContext
++- (NSManagedObjectContext *)newPrivateContext
+ {
+-    NSManagedObjectContext *context = [super createConfinementContext];
+-    [context setParentContext:[self context]];
++    NSManagedObjectContext *context = [NSManagedObjectContext MR_privateQueueContext];
++    context.parentContext = self.context;
++
+     return context;
+ }
+ 
+diff --git a/Library/MagicalRecordStack/MagicalRecordStack+Actions.m b/Library/MagicalRecordStack/MagicalRecordStack+Actions.m
+index 0d344f2e..046bfc05 100644
+--- a/Library/MagicalRecordStack/MagicalRecordStack+Actions.m
++++ b/Library/MagicalRecordStack/MagicalRecordStack+Actions.m
+@@ -66,11 +66,13 @@ - (void)saveWithBlock:(void (^)(NSManagedObjectContext *))block identifier:(NSSt
+         {
+             MRLogVerbose(@"%@ save starting", contextWorkingName);
+ 
+-            NSManagedObjectContext *localContext = [self newConfinementContext];
+-            [localContext MR_setWorkingName:contextWorkingName];
+-
+-            block(localContext);
++            NSManagedObjectContext *localContext = [self newPrivateContext];
++            [localContext performBlockAndWait:^{
++                [localContext MR_setWorkingName:contextWorkingName];
+ 
++                block(localContext);
++            }];
++
+             MRContextSaveOptions saveOptions = (MRContextSaveOptions)(MRContextSaveOptionsSaveParentContexts | MRContextSaveOptionsSaveSynchronously);
+             [localContext MR_saveWithOptions:saveOptions completion:completion];
+         }
+@@ -87,19 +89,23 @@ - (BOOL)saveWithBlockAndWait:(void (^)(NSManagedObjectContext *localContext))blo
+ - (BOOL)saveWithBlockAndWait:(void (^)(NSManagedObjectContext *localContext))block error:(NSError *__autoreleasing *)error
+ {
+     NSParameterAssert(block);
+-    NSManagedObjectContext *localContext = [self newConfinementContext];
+ 
+-    block(localContext);
++    __block BOOL saveSuccess = YES;
++    NSManagedObjectContext *localContext = [self newPrivateContext];
++
++    __block BOOL contextHasChanges = NO;
++    [localContext performBlockAndWait:^{
++        block(localContext);
++        contextHasChanges = localContext.hasChanges;
++    }];
+ 
+-    if (NO == [localContext hasChanges])
++    if (NO == contextHasChanges)
+     {
+         MRLogInfo(@"NO CHANGES IN ** %@ ** CONTEXT - NOT SAVING", [localContext MR_workingName]);
+ 
+         return YES;
+     }
+ 
+-    __block BOOL saveSuccess = YES;
+-
+     MRContextSaveOptions saveOptions = (MRContextSaveOptions)(MRContextSaveOptionsSaveParentContexts | MRContextSaveOptionsSaveSynchronously);
+     [localContext MR_saveWithOptions:saveOptions completion:^(BOOL localSuccess, NSError *localSaveError) {
+         saveSuccess = localSuccess;
+diff --git a/Library/MagicalRecordStack/MagicalRecordStack+Private.h b/Library/MagicalRecordStack/MagicalRecordStack+Private.h
+index 0f5c3680..02151ae9 100644
+--- a/Library/MagicalRecordStack/MagicalRecordStack+Private.h
++++ b/Library/MagicalRecordStack/MagicalRecordStack+Private.h
+@@ -8,7 +8,6 @@
+ - (nonnull NSPersistentStoreCoordinator *)createCoordinator;
+ - (nonnull NSPersistentStoreCoordinator *)createCoordinatorWithOptions:(nullable NSDictionary *)options;
+ 
+-- (nonnull NSManagedObjectContext *)createConfinementContext;
+ - (void)loadStack;
+ 
+ @end
+diff --git a/Library/MagicalRecordStack/MagicalRecordStack.h b/Library/MagicalRecordStack/MagicalRecordStack.h
+index 01beeb7e..0a866fe9 100644
+--- a/Library/MagicalRecordStack/MagicalRecordStack.h
++++ b/Library/MagicalRecordStack/MagicalRecordStack.h
+@@ -24,7 +24,7 @@
+ 
+ - (void)reset;
+ 
+-- (nonnull NSManagedObjectContext *)newConfinementContext;
++- (nonnull NSManagedObjectContext *)newPrivateContext;
+ 
+ - (void)setModelFromClass:(nonnull Class)modelClass;
+ - (void)setModelNamed:(nonnull NSString *)modelName;
+diff --git a/Library/MagicalRecordStack/MagicalRecordStack.m b/Library/MagicalRecordStack/MagicalRecordStack.m
+index 9d1ff40b..73c91b9b 100644
+--- a/Library/MagicalRecordStack/MagicalRecordStack.m
++++ b/Library/MagicalRecordStack/MagicalRecordStack.m
+@@ -116,18 +116,18 @@ - (nonnull NSString *)stackName
+     return _stackName;
+ }
+ 
+-- (NSManagedObjectContext *)createConfinementContext
++- (NSManagedObjectContext *)createPrivateContext
+ {
+-    NSManagedObjectContext *context = [NSManagedObjectContext MR_confinementContext];
++    NSManagedObjectContext *context = [NSManagedObjectContext MR_privateQueueContext];
+     NSString *workingName = [[context MR_workingName] stringByAppendingFormat:@" (%@)", [self stackName]];
+     [context MR_setWorkingName:workingName];
+     [context setMergePolicy:NSMergeByPropertyObjectTrumpMergePolicy];
+     return context;
+ }
+ 
+-- (NSManagedObjectContext *)newConfinementContext
++- (NSManagedObjectContext *)newPrivateContext
+ {
+-    NSManagedObjectContext *context = [self createConfinementContext];
++    NSManagedObjectContext *context = [self createPrivateContext];
+ 
+     return context;
+ }
+diff --git a/Library/MagicalRecordStack/SQLiteMagicalRecordStack.m b/Library/MagicalRecordStack/SQLiteMagicalRecordStack.m
+index 359c9317..16319008 100644
+--- a/Library/MagicalRecordStack/SQLiteMagicalRecordStack.m
++++ b/Library/MagicalRecordStack/SQLiteMagicalRecordStack.m
+@@ -108,13 +108,6 @@ - (NSPersistentStoreCoordinator *)createCoordinator
+     return [self createCoordinatorWithOptions:[self defaultStoreOptions]];
+ }
+ 
+-- (NSManagedObjectContext *)newConfinementContext
+-{
+-    NSManagedObjectContext *context = [super newConfinementContext];
+-    [context setParentContext:[self context]];
+-    return context;
+-}
+-
+ - (NSPersistentStoreCoordinator *)createCoordinatorWithOptions:(NSDictionary *)options
+ {
+     MRLogVerbose(@"Loading Store at URL: %@", self.storeURL);
+diff --git a/Library/MagicalRecordStack/SQLiteWithSavingContextMagicalRecordStack.m b/Library/MagicalRecordStack/SQLiteWithSavingContextMagicalRecordStack.m
+index 93fa4e07..cf440ac0 100644
+--- a/Library/MagicalRecordStack/SQLiteWithSavingContextMagicalRecordStack.m
++++ b/Library/MagicalRecordStack/SQLiteWithSavingContextMagicalRecordStack.m
+@@ -45,11 +45,4 @@ - (NSManagedObjectContext *)context
+     return _context;
+ }
+ 
+-- (NSManagedObjectContext *)newConfinementContext
+-{
+-    NSManagedObjectContext *context = [super createConfinementContext];
+-    [context setParentContext:[self savingContext]];
+-    return context;
+-}
+-
+ @end
+diff --git a/MagicalRecord.xcodeproj/project.pbxproj b/MagicalRecord.xcodeproj/project.pbxproj
+index 8fc8451a..d51093a8 100644
+--- a/MagicalRecord.xcodeproj/project.pbxproj
++++ b/MagicalRecord.xcodeproj/project.pbxproj
+@@ -1206,7 +1206,7 @@
+             isa = PBXProject;
+             attributes = {
+                 CLASSPREFIX = "";
+-                LastUpgradeCheck = 0700;
++                LastUpgradeCheck = 0820;
+                 ORGANIZATIONNAME = "Magical Panda Software LLC";
+                 TargetAttributes = {
+                     9053F55919E0244C00137362 = {
+@@ -1548,7 +1548,7 @@
+         9053F56E19E0244C00137362 /* Debug */ = {
+             isa = XCBuildConfiguration;
+             buildSettings = {
+-                "CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
++                "CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+                 DEFINES_MODULE = YES;
+                 INFOPLIST_FILE = "Support/MagicalRecord-Info.plist";
+                 INSTALL_PATH = "@rpath";
+@@ -1561,7 +1561,7 @@
+         9053F57019E0244C00137362 /* Release */ = {
+             isa = XCBuildConfiguration;
+             buildSettings = {
+-                "CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
++                "CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+                 DEFINES_MODULE = YES;
+                 INFOPLIST_FILE = "Support/MagicalRecord-Info.plist";
+                 INSTALL_PATH = "@rpath";
+@@ -1593,6 +1593,7 @@
+                 WARNING_CFLAGS = (
+                     "$(inherited)",
+                     "-Wno-documentation-unknown-command",
++                    "-Wno-partial-availability",
+                 );
+             };
+             name = Debug;
+@@ -1619,6 +1620,7 @@
+                 WARNING_CFLAGS = (
+                     "$(inherited)",
+                     "-Wno-documentation-unknown-command",
++                    "-Wno-partial-availability",
+                 );
+             };
+             name = Release;
+@@ -1643,6 +1645,7 @@
+                 WARNING_CFLAGS = (
+                     "$(inherited)",
+                     "-Wno-documentation-unknown-command",
++                    "-Wno-partial-availability",
+                 );
+             };
+             name = Debug;
+@@ -1667,6 +1670,7 @@
+                 WARNING_CFLAGS = (
+                     "$(inherited)",
+                     "-Wno-documentation-unknown-command",
++                    "-Wno-partial-availability",
+                 );
+             };
+             name = Release;
+@@ -1738,8 +1742,8 @@
+                 GCC_WARN_UNUSED_LABEL = YES;
+                 GCC_WARN_UNUSED_PARAMETER = YES;
+                 GCC_WARN_UNUSED_VARIABLE = YES;
+-                IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+-                MACOSX_DEPLOYMENT_TARGET = 10.9;
++                IPHONEOS_DEPLOYMENT_TARGET = 9.1;
++                MACOSX_DEPLOYMENT_TARGET = 10.11;
+                 MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
+                 ONLY_ACTIVE_ARCH = YES;
+                 OTHER_CFLAGS = (
+@@ -1827,8 +1831,8 @@
+                 GCC_WARN_UNUSED_LABEL = YES;
+                 GCC_WARN_UNUSED_PARAMETER = YES;
+                 GCC_WARN_UNUSED_VARIABLE = YES;
+-                IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+-                MACOSX_DEPLOYMENT_TARGET = 10.9;
++                IPHONEOS_DEPLOYMENT_TARGET = 9.1;
++                MACOSX_DEPLOYMENT_TARGET = 10.11;
+                 MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
+                 OTHER_CFLAGS = (
+                     "-DNDEBUG",
+diff --git a/Tests/Core/MagicalRecord+ActionsTests.m b/Tests/Core/MagicalRecord+ActionsTests.m
+index 1913d947..d4f19e82 100644
+--- a/Tests/Core/MagicalRecord+ActionsTests.m
++++ b/Tests/Core/MagicalRecord+ActionsTests.m
+@@ -174,7 +174,9 @@ - (void)testAsynchronousSaveActionMakesInsertedEntitiesAvailableInTheDefaultCont
+         NSManagedObject *insertedObject = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
+         XCTAssertTrue(insertedObject.hasChanges);
+ 
+-        [localContext obtainPermanentIDsForObjects:@[ insertedObject ] error:nil];
++        [localContext performBlockAndWait:^{
++            [localContext obtainPermanentIDsForObjects:@[ insertedObject ] error:nil];
++        }];
+         objectId = [insertedObject objectID];
+     }
+         completion:^(BOOL success, __unused NSError *error) {
+diff --git a/Tests/Core/NSManagedObjectContext+MagicalObserving.m b/Tests/Core/NSManagedObjectContext+MagicalObserving.m
+index 7310bb19..06be9922 100644
+--- a/Tests/Core/NSManagedObjectContext+MagicalObserving.m
++++ b/Tests/Core/NSManagedObjectContext+MagicalObserving.m
+@@ -19,15 +19,25 @@ - (void)testCanObserveContextAndSaveChanges
+ 
+     NSManagedObject *testEntity = [SingleEntityWithNoRelationships MR_createEntityInContext:otherContext];
+     XCTAssertNotNil(testEntity);
+-    XCTAssertTrue(otherContext.hasChanges);
+-    XCTAssertFalse(stackContext.hasChanges);
++    [otherContext performBlockAndWait:^{
++        XCTAssertTrue(otherContext.hasChanges);
++    }];
++
++    [stackContext performBlockAndWait:^{
++        XCTAssertFalse(stackContext.hasChanges);
++    }];
+ 
+     [stackContext MR_observeContextDidSaveAndSaveChangesToSelf:otherContext];
+ 
+     [otherContext MR_saveOnlySelfAndWait];
+ 
+-    XCTAssertFalse(otherContext.hasChanges);
+-    XCTAssertFalse(stackContext.hasChanges);
++    [otherContext performBlockAndWait:^{
++        XCTAssertFalse(otherContext.hasChanges);
++    }];
++
++    [stackContext performBlockAndWait:^{
++        XCTAssertFalse(stackContext.hasChanges);
++    }];
+ }
+ 
+ @end
+diff --git a/Tests/Core/NSManagedObjectContext+MagicalRecordTests.m b/Tests/Core/NSManagedObjectContext+MagicalRecordTests.m
+index 4b207ec8..25833934 100644
+--- a/Tests/Core/NSManagedObjectContext+MagicalRecordTests.m
++++ b/Tests/Core/NSManagedObjectContext+MagicalRecordTests.m
+@@ -14,7 +14,8 @@ @implementation NSManagedObjectContextMagicalRecordTests
+ - (void)testCanNotifyDefaultContextOnSave
+ {
+     NSManagedObjectContext *stackContext = self.stack.context;
+-    NSManagedObjectContext *testContext = [NSManagedObjectContext MR_confinementContextWithParent:stackContext];
++    NSManagedObjectContext *testContext = [NSManagedObjectContext MR_privateQueueContext];
++    testContext.parentContext = stackContext;
+     XCTAssertEqualObjects(testContext.parentContext, stackContext);
+ }
+ 
+diff --git a/Tests/Core/NSManagedObjectContext+MagicalSavesTests.m b/Tests/Core/NSManagedObjectContext+MagicalSavesTests.m
+index a738189d..c1553ea4 100644
+--- a/Tests/Core/NSManagedObjectContext+MagicalSavesTests.m
++++ b/Tests/Core/NSManagedObjectContext+MagicalSavesTests.m
+@@ -19,10 +19,12 @@ - (void)testSaveToSelfOnlyWhenSaveIsSynchronous
+     SingleEntityWithNoRelationships *insertedObject = [SingleEntityWithNoRelationships MR_createEntityInContext:childContext];
+     XCTAssertTrue(insertedObject.hasChanges);
+ 
+-    NSError *obtainIDsError;
+-    BOOL obtainIDsResult = [childContext obtainPermanentIDsForObjects:@[ insertedObject ] error:&obtainIDsError];
+-    XCTAssertTrue(obtainIDsResult);
+-    XCTAssertNil(obtainIDsError);
++    [childContext performBlockAndWait:^{
++        NSError *obtainIDsError;
++        BOOL obtainIDsResult = [childContext obtainPermanentIDsForObjects:@[ insertedObject ] error:&obtainIDsError];
++        XCTAssertTrue(obtainIDsResult);
++        XCTAssertNil(obtainIDsError);
++    }];
+ 
+     NSManagedObjectID *insertedObjectID = [insertedObject objectID];
+     XCTAssertNotNil(insertedObjectID);
+@@ -38,10 +40,12 @@ - (void)testSaveToSelfOnlyWhenSaveIsSynchronous
+     XCTAssertNotNil(parentContextFetchedObject);
+     XCTAssertTrue(parentContextFetchedObject.hasChanges, @"Saving a child context moves the saved changes up to the parent, but does not save them, leaving the parent context with changes");
+ 
+-    NSManagedObject *childContextFetchedObject = [childContext objectRegisteredForID:insertedObjectID];
++    [childContext performBlockAndWait:^{
++        NSManagedObject *childContextFetchedObject = [childContext objectRegisteredForID:insertedObjectID];
+ 
+-    XCTAssertNotNil(childContextFetchedObject);
+-    XCTAssertFalse(childContextFetchedObject.hasChanges, @"The child context should not have changes after the save");
++        XCTAssertNotNil(childContextFetchedObject);
++        XCTAssertFalse(childContextFetchedObject.hasChanges, @"The child context should not have changes after the save");
++    }];
+ }
+ 
+ - (void)testSaveToSelfOnlyWhenSaveIsAsynchronous
+@@ -53,10 +57,12 @@ - (void)testSaveToSelfOnlyWhenSaveIsAsynchronous
+     SingleEntityWithNoRelationships *insertedObject = [SingleEntityWithNoRelationships MR_createEntityInContext:childContext];
+     XCTAssertTrue(insertedObject.hasChanges);
+ 
+-    NSError *obtainIDsError;
+-    BOOL obtainIDsResult = [childContext obtainPermanentIDsForObjects:@[ insertedObject ] error:&obtainIDsError];
+-    XCTAssertTrue(obtainIDsResult);
+-    XCTAssertNil(obtainIDsError);
++    [childContext performBlockAndWait:^{
++        NSError *obtainIDsError;
++        BOOL obtainIDsResult = [childContext obtainPermanentIDsForObjects:@[ insertedObject ] error:&obtainIDsError];
++        XCTAssertTrue(obtainIDsResult);
++        XCTAssertNil(obtainIDsError);
++    }];
+ 
+     NSManagedObjectID *insertedObjectID = [insertedObject objectID];
+     XCTAssertNotNil(insertedObjectID);
+@@ -71,7 +77,10 @@ - (void)testSaveToSelfOnlyWhenSaveIsAsynchronous
+         XCTAssertTrue(success);
+         XCTAssertNil(error);
+ 
+-        parentContextFetchedObject = [parentContext objectRegisteredForID:insertedObjectID];
++        [parentContext performBlockAndWait:^{
++            parentContextFetchedObject = [parentContext objectRegisteredForID:insertedObjectID];
++        }];
++
+         childContextFetchedObject = [childContext objectRegisteredForID:insertedObjectID];
+ 
+         [expectation fulfill];
+@@ -85,7 +94,10 @@ - (void)testSaveToSelfOnlyWhenSaveIsAsynchronous
+ 
+     XCTAssertNotNil(parentContextFetchedObject);
+     XCTAssertTrue(parentContextFetchedObject.hasChanges, @"Saves from child contexts should leave changes in the parent");
+-    XCTAssertFalse(childContext.hasChanges, @"Child context should not have changes after the save has completed");
++
++    [childContext performBlockAndWait:^{
++        XCTAssertFalse(childContext.hasChanges, @"Child context should not have changes after the save has completed");
++    }];
+ }
+ 
+ - (void)testSaveToSelfOnlyWhenSaveIsAsynchronousCallsCorrectThreadOnCompletion
+@@ -127,19 +139,23 @@ - (void)testSaveToPersistentStoreWhenSaveIsSynchronous
+     SingleEntityWithNoRelationships *insertedObject = [SingleEntityWithNoRelationships MR_createEntityInContext:childContext];
+     XCTAssertTrue(insertedObject.hasChanges);
+ 
+-    NSError *obtainIDsError;
+-    BOOL obtainIDsResult = [childContext obtainPermanentIDsForObjects:@[ insertedObject ] error:&obtainIDsError];
+-    XCTAssertTrue(obtainIDsResult);
+-    XCTAssertNil(obtainIDsError);
++    [childContext performBlockAndWait:^{
++        NSError *obtainIDsError;
++        BOOL obtainIDsResult = [childContext obtainPermanentIDsForObjects:@[ insertedObject ] error:&obtainIDsError];
++        XCTAssertTrue(obtainIDsResult);
++        XCTAssertNil(obtainIDsError);
++    }];
+ 
+     NSManagedObjectID *insertedObjectID = [insertedObject objectID];
+     XCTAssertNotNil(insertedObjectID);
+     XCTAssertFalse(insertedObjectID.isTemporaryID);
+ 
+-    NSError *saveError;
+-    BOOL saveResult = [childContext MR_saveToPersistentStoreAndWaitWithError:&saveError];
+-    XCTAssertTrue(saveResult);
+-    XCTAssertNil(saveError);
++    [childContext performBlockAndWait:^{
++        NSError *saveError;
++        BOOL saveResult = [childContext MR_saveToPersistentStoreAndWaitWithError:&saveError];
++        XCTAssertTrue(saveResult);
++        XCTAssertNil(saveError);
++    }];
+ 
+     NSError *fetchExistingObjectFromParentContextError;
+     NSManagedObject *parentContextFetchedObject = [parentContext existingObjectWithID:insertedObjectID error:&fetchExistingObjectFromParentContextError];
+@@ -147,9 +163,11 @@ - (void)testSaveToPersistentStoreWhenSaveIsSynchronous
+     XCTAssertNotNil(parentContextFetchedObject);
+     XCTAssertFalse(parentContextFetchedObject.hasChanges, @"Saving to the persistent store should save to all parent contexts, leaving no changes");
+ 
+-    NSManagedObject *childContextFetchedObject = [childContext objectRegisteredForID:insertedObjectID];
+-    XCTAssertNotNil(childContextFetchedObject);
+-    XCTAssertFalse(childContextFetchedObject.hasChanges, @"The child context should not have changes after the save");
++    [childContext performBlockAndWait:^{
++        NSManagedObject *childContextFetchedObject = [childContext objectRegisteredForID:insertedObjectID];
++        XCTAssertNotNil(childContextFetchedObject);
++        XCTAssertFalse(childContextFetchedObject.hasChanges, @"The child context should not have changes after the save");
++    }];
+ }
+ 
+ - (void)testSaveToPersistentStoreWhenSaveIsAsynchronous
+@@ -161,10 +179,12 @@ - (void)testSaveToPersistentStoreWhenSaveIsAsynchronous
+     SingleEntityWithNoRelationships *insertedObject = [SingleEntityWithNoRelationships MR_createEntityInContext:childContext];
+     XCTAssertTrue(insertedObject.hasChanges);
+ 
+-    NSError *obtainIDsError;
+-    BOOL obtainIDsResult = [childContext obtainPermanentIDsForObjects:@[ insertedObject ] error:&obtainIDsError];
+-    XCTAssertTrue(obtainIDsResult);
+-    XCTAssertNil(obtainIDsError);
++    [childContext performBlockAndWait:^{
++        NSError *obtainIDsError;
++        BOOL obtainIDsResult = [childContext obtainPermanentIDsForObjects:@[ insertedObject ] error:&obtainIDsError];
++        XCTAssertTrue(obtainIDsResult);
++        XCTAssertNil(obtainIDsError);
++    }];
+ 
+     NSManagedObjectID *insertedObjectID = [insertedObject objectID];
+     XCTAssertNotNil(insertedObjectID);
+@@ -195,7 +215,10 @@ - (void)testSaveToPersistentStoreWhenSaveIsAsynchronous
+     XCTAssertNil(fetchExistingObjectFromParentContextError);
+     XCTAssertNotNil(parentContextFetchedObject);
+     XCTAssertFalse(parentContextFetchedObject.hasChanges, @"Saving to the persistent store should save to all parent contexts, leaving no changes");
+-    XCTAssertFalse(childContext.hasChanges, @"The child context should not have changes after the save");
++
++    [childContext performBlockAndWait:^{
++        XCTAssertFalse(childContext.hasChanges, @"The child context should not have changes after the save");
++    }];
+ }
+ 
+ - (void)testThatSavedObjectsHavePermanentIDs
+diff --git a/Tests/DataImport/ImportSingleEntityWithNoRelationshipsTests.m b/Tests/DataImport/ImportSingleEntityWithNoRelationshipsTests.m
+index 46ebc976..154af160 100644
+--- a/Tests/DataImport/ImportSingleEntityWithNoRelationshipsTests.m
++++ b/Tests/DataImport/ImportSingleEntityWithNoRelationshipsTests.m
+@@ -125,10 +125,10 @@ - (void)testImportNSColorAttributeToEntity
+ {
+     NSColor *actualColor = self.testEntity.colorTestAttribute;
+ 
+-    XCTAssertEqualWithAccuracy([actualColor alphaComponent], (CGFloat)(255.0 / 255.0), FLT_EPSILON, @"Unexpected value returned");
+-    XCTAssertEqualWithAccuracy([actualColor redComponent], (CGFloat)(64.0f / 255.0f), FLT_EPSILON, @"Unexpected value returned");
+-    XCTAssertEqualWithAccuracy([actualColor greenComponent], (CGFloat)(128.0f / 255.0f), FLT_EPSILON, @"Unexpected value returned");
+-    XCTAssertEqualWithAccuracy([actualColor blueComponent], (CGFloat)(225.0f / 255.0f), FLT_EPSILON, @"Unexpected value returned");
++    XCTAssertEqualWithAccuracy([actualColor alphaComponent], (CGFloat)(255.0f / 255.0f), 0.001, @"Unexpected value returned");
++    XCTAssertEqualWithAccuracy([actualColor redComponent], (CGFloat)(64.0f / 255.0f), 0.001, @"Unexpected value returned");
++    XCTAssertEqualWithAccuracy([actualColor greenComponent], (CGFloat)(128.0f / 255.0f), 0.001, @"Unexpected value returned");
++    XCTAssertEqualWithAccuracy([actualColor blueComponent], (CGFloat)(225.0f / 255.0f), 0.001, @"Unexpected value returned");
+ }
+ 
+ #endif /* if TARGET_OS_IPHONE */
+diff --git a/Tests/Fixtures/Sample Model/TestModel.xcdatamodeld/TestModel.xcdatamodel/contents b/Tests/Fixtures/Sample Model/TestModel.xcdatamodeld/TestModel.xcdatamodel/contents
+index 726cbce1..f00c5f61 100644
+--- a/Tests/Fixtures/Sample Model/TestModel.xcdatamodeld/TestModel.xcdatamodel/contents
++++ b/Tests/Fixtures/Sample Model/TestModel.xcdatamodeld/TestModel.xcdatamodel/contents
+@@ -1,5 +1,5 @@
+ <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+-<model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="9525" systemVersion="15B42" minimumToolsVersion="Automatic">
++<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="12140" systemVersion="16E189a" minimumToolsVersion="Xcode 7.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="">
+     <entity name="AbstractRelatedEntity" representedClassName="AbstractRelatedEntity" isAbstract="YES" syncable="YES">
+         <attribute name="sampleBaseAttribute" optional="YES" attributeType="String" syncable="YES"/>
+     </entity>
+@@ -9,14 +9,14 @@
+     <entity name="EntityWithDifferentClassName" representedClassName="DifferentClassNameMapping" syncable="YES"/>
+     <entity name="EntityWithoutEntityNameMethodWithASuffix" representedClassName="EntityWithoutEntityNameMethod" syncable="YES"/>
+     <entity name="MappedEntity" representedClassName="MappedEntity" syncable="YES">
+-        <attribute name="mappedEntityID" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
++        <attribute name="mappedEntityID" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+         <attribute name="nestedAttribute" optional="YES" attributeType="String" syncable="YES">
+             <userInfo>
+                 <entry key="mappedKeyName" value="attributeValue.nestedValue"/>
+             </userInfo>
+         </attribute>
+         <attribute name="sampleAttribute" optional="YES" attributeType="String" syncable="YES"/>
+-        <attribute name="testMappedEntityID" optional="YES" attributeType="Integer 64" defaultValueString="0" syncable="YES">
++        <attribute name="testMappedEntityID" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO" syncable="YES">
+             <userInfo>
+                 <entry key="mappedKeyName" value="id"/>
+             </userInfo>
+@@ -26,7 +26,7 @@
+         </userInfo>
+     </entity>
+     <entity name="SingleEntityRelatedToManyMappedEntitiesUsingMappedPrimaryKey" representedClassName="SingleEntityRelatedToManyMappedEntitiesUsingMappedPrimaryKey" syncable="YES">
+-        <attribute name="testPrimaryKey" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
++        <attribute name="testPrimaryKey" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+         <relationship name="mappedEntities" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MappedEntity" syncable="YES">
+             <userInfo>
+                 <entry key="relatedByAttribute" value="testMappedEntityID"/>
+@@ -37,7 +37,7 @@
+         </userInfo>
+     </entity>
+     <entity name="SingleEntityRelatedToMappedEntityUsingDefaults" representedClassName="SingleEntityRelatedToMappedEntityUsingDefaults" syncable="YES">
+-        <attribute name="singleEntityRelatedToMappedEntityUsingDefaultsID" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
++        <attribute name="singleEntityRelatedToMappedEntityUsingDefaultsID" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+         <relationship name="mappedEntity" optional="YES" minCount="1" maxCount="1" deletionRule="Cascade" destinationEntity="MappedEntity" syncable="YES"/>
+     </entity>
+     <entity name="SingleEntityRelatedToMappedEntityUsingMappedPrimaryKey" representedClassName="SingleEntityRelatedToMappedEntityUsingMappedPrimaryKey" syncable="YES">
+@@ -68,40 +68,40 @@
+         </relationship>
+     </entity>
+     <entity name="SingleEntityWithNoRelationships" representedClassName="SingleEntityWithNoRelationships" syncable="YES">
+-        <attribute name="booleanAsStringTestAttribute" optional="YES" attributeType="Boolean" syncable="YES"/>
+-        <attribute name="booleanTestAttribute" optional="YES" attributeType="Boolean" syncable="YES"/>
++        <attribute name="booleanAsStringTestAttribute" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
++        <attribute name="booleanTestAttribute" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
+         <attribute name="colorTestAttribute" optional="YES" attributeType="Transformable" syncable="YES">
+             <userInfo>
+                 <entry key="attributeValueClassName" value="*Color"/>
+             </userInfo>
+         </attribute>
+-        <attribute name="dateTestAttribute" optional="YES" attributeType="Date" syncable="YES"/>
+-        <attribute name="dateWithCustomFormat" optional="YES" attributeType="Date" syncable="YES">
++        <attribute name="dateTestAttribute" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
++        <attribute name="dateWithCustomFormat" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES">
+             <userInfo>
+                 <entry key="dateFormat" value="M/d/yyyy H-mm-ss"/>
+             </userInfo>
+         </attribute>
+         <attribute name="decimalTestAttribute" optional="YES" attributeType="Decimal" defaultValueString="0.0" syncable="YES"/>
+-        <attribute name="doubleTestAttribute" optional="YES" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+-        <attribute name="floatTestAttribute" optional="YES" attributeType="Float" defaultValueString="0" syncable="YES"/>
+-        <attribute name="int16TestAttribute" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+-        <attribute name="int32TestAttribute" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+-        <attribute name="int64TestAttribute" optional="YES" attributeType="Integer 64" defaultValueString="0" syncable="YES"/>
++        <attribute name="doubleTestAttribute" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="NO" syncable="YES"/>
++        <attribute name="floatTestAttribute" optional="YES" attributeType="Float" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
++        <attribute name="int16TestAttribute" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
++        <attribute name="int32TestAttribute" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
++        <attribute name="int64TestAttribute" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+         <attribute name="mappedStringAttribute" optional="YES" attributeType="String" syncable="YES">
+             <userInfo>
+                 <entry key="mappedKeyName" value="mappedAttributeWithStringValue"/>
+             </userInfo>
+         </attribute>
+         <attribute name="notInJsonAttribute" optional="YES" attributeType="String" defaultValueString="Set From Core Data Model Editor" syncable="YES"/>
+-        <attribute name="nullTestAttribute" optional="YES" attributeType="Integer 64" defaultValueString="100" syncable="YES"/>
++        <attribute name="nullTestAttribute" optional="YES" attributeType="Integer 64" usesScalarValueType="NO" syncable="YES"/>
+         <attribute name="numberAsStringTestAttribute" optional="YES" attributeType="String" syncable="YES"/>
+         <attribute name="stringTestAttribute" optional="YES" attributeType="String" syncable="YES"/>
+-        <attribute name="unixTime13TestAttribute" optional="YES" attributeType="Date" syncable="YES">
++        <attribute name="unixTime13TestAttribute" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES">
+             <userInfo>
+                 <entry key="dateFormat" value="UnixTime"/>
+             </userInfo>
+         </attribute>
+-        <attribute name="unixTimeTestAttribute" optional="YES" attributeType="Date" syncable="YES"/>
++        <attribute name="unixTimeTestAttribute" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
+     </entity>
+     <entity name="SingleRelatedEntity" representedClassName="SingleRelatedEntity" syncable="YES">
+         <attribute name="mappedStringAttribute" optional="YES" attributeType="String" syncable="YES"/>
+

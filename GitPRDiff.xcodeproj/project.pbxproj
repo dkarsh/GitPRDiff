@@ -15,6 +15,7 @@
 		A85975A825F291560095178E /* GitPRDiffUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975A725F291560095178E /* GitPRDiffUITests.swift */; };
 		A85975BC25F295700095178E /* FileChanged.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975BB25F295700095178E /* FileChanged.swift */; };
 		A85975BD25F295700095178E /* FileChanged.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975BB25F295700095178E /* FileChanged.swift */; };
+		A85975C225F299C10095178E /* PRDataRespond.txt in Resources */ = {isa = PBXBuildFile; fileRef = A85975C125F299C10095178E /* PRDataRespond.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +49,7 @@
 		A85975A725F291560095178E /* GitPRDiffUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitPRDiffUITests.swift; sourceTree = "<group>"; };
 		A85975A925F291560095178E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A85975BB25F295700095178E /* FileChanged.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileChanged.swift; sourceTree = "<group>"; };
+		A85975C125F299C10095178E /* PRDataRespond.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = PRDataRespond.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,6 +122,7 @@
 			isa = PBXGroup;
 			children = (
 				A859759C25F291550095178E /* GitPRDiffTests.swift */,
+				A85975C125F299C10095178E /* PRDataRespond.txt */,
 				A859759E25F291560095178E /* Info.plist */,
 			);
 			path = GitPRDiffTests;
@@ -237,6 +240,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A85975C225F299C10095178E /* PRDataRespond.txt in Resources */,
 				A859759225F291550095178E /* Preview Assets.xcassets in Resources */,
 				A859758F25F291550095178E /* Assets.xcassets in Resources */,
 			);
