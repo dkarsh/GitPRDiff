@@ -13,6 +13,8 @@
 		A859759225F291550095178E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A859759125F291550095178E /* Preview Assets.xcassets */; };
 		A859759D25F291550095178E /* GitPRDiffTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A859759C25F291550095178E /* GitPRDiffTests.swift */; };
 		A85975A825F291560095178E /* GitPRDiffUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975A725F291560095178E /* GitPRDiffUITests.swift */; };
+		A85975BC25F295700095178E /* FileChanged.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975BB25F295700095178E /* FileChanged.swift */; };
+		A85975BD25F295700095178E /* FileChanged.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975BB25F295700095178E /* FileChanged.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +47,7 @@
 		A85975A325F291560095178E /* GitPRDiffUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GitPRDiffUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A85975A725F291560095178E /* GitPRDiffUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitPRDiffUITests.swift; sourceTree = "<group>"; };
 		A85975A925F291560095178E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A85975BB25F295700095178E /* FileChanged.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileChanged.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,6 +100,7 @@
 			children = (
 				A859758A25F291540095178E /* GitPRDiffApp.swift */,
 				A859758C25F291540095178E /* ContentView.swift */,
+				A85975BB25F295700095178E /* FileChanged.swift */,
 				A859758E25F291550095178E /* Assets.xcassets */,
 				A859759325F291550095178E /* Info.plist */,
 				A859759025F291550095178E /* Preview Content */,
@@ -261,6 +265,7 @@
 			files = (
 				A859758D25F291540095178E /* ContentView.swift in Sources */,
 				A859758B25F291540095178E /* GitPRDiffApp.swift in Sources */,
+				A85975BC25F295700095178E /* FileChanged.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -268,6 +273,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A85975BD25F295700095178E /* FileChanged.swift in Sources */,
 				A859759D25F291550095178E /* GitPRDiffTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
