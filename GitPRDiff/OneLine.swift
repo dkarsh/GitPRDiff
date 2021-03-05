@@ -7,17 +7,18 @@
 
 import Foundation
 
-enum LineType {
-    case diff
-    case index
-    case diffInfo
-    case aFileName
-    case bFileName
-    case line
-    case deleteLine
-    case addLine
+enum LineType:String {
+    case diff = "diff"
+    case index = "index"
+    case diffInfo = "@@"
+    case aFileName = "---"
+    case bFileName = "+++"
+    case line = ""
+    case deleteLine = "-"
+    case addLine = "+"
     
-    var prefix: String {
+
+    var removeString: String {
         switch self {
         case .diff:
             return "diff --git"
@@ -37,10 +38,22 @@ enum LineType {
             return "+"
         }
     }
+    
+//    func cleanText(_ str:String) -> String {
+//        if self == .
+//        return String(str.dropFirst(self.removeString.count))
+//    }
 }
 
-struct LineEntry {
+struct OneLine {
     var text:String
     var type:LineType
     var id:Int
+    
+    init(_ raw:String, id:Int) {
+        self.type = LineType(rawValue:String(raw.split(separator: " ").first ?? "")) ?? .line
+        self.text = raw
+        self.id = id
+    }
 }
+

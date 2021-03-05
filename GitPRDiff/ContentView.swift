@@ -24,9 +24,10 @@ struct ContentView: View {
             if let data = data {
             let str = String(decoding: data, as: UTF8.self)
             let myStrings = str.components(separatedBy: .newlines)
-                for line in myStrings {
-                    
-                }
+            let formatedLines = myStrings.enumerated().map { OneLine($1,id:$0) }
+            let linesType = formatedLines.map{$0.type}
+                print(linesType)
+             
             }
         }.resume()
         
