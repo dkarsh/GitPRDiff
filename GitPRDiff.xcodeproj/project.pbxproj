@@ -16,6 +16,8 @@
 		A85975BC25F295700095178E /* FileChanged.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975BB25F295700095178E /* FileChanged.swift */; };
 		A85975BD25F295700095178E /* FileChanged.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975BB25F295700095178E /* FileChanged.swift */; };
 		A85975C225F299C10095178E /* PRDataRespond.txt in Resources */ = {isa = PBXBuildFile; fileRef = A85975C125F299C10095178E /* PRDataRespond.txt */; };
+		A85975CA25F29BD70095178E /* OneLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975C925F29BD70095178E /* OneLine.swift */; };
+		A85975CB25F29BD70095178E /* OneLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975C925F29BD70095178E /* OneLine.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,6 +52,7 @@
 		A85975A925F291560095178E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A85975BB25F295700095178E /* FileChanged.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileChanged.swift; sourceTree = "<group>"; };
 		A85975C125F299C10095178E /* PRDataRespond.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = PRDataRespond.txt; sourceTree = "<group>"; };
+		A85975C925F29BD70095178E /* OneLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OneLine.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,6 +106,7 @@
 				A859758A25F291540095178E /* GitPRDiffApp.swift */,
 				A859758C25F291540095178E /* ContentView.swift */,
 				A85975BB25F295700095178E /* FileChanged.swift */,
+				A85975C925F29BD70095178E /* OneLine.swift */,
 				A859758E25F291550095178E /* Assets.xcassets */,
 				A859759325F291550095178E /* Info.plist */,
 				A859759025F291550095178E /* Preview Content */,
@@ -269,6 +273,7 @@
 			files = (
 				A859758D25F291540095178E /* ContentView.swift in Sources */,
 				A859758B25F291540095178E /* GitPRDiffApp.swift in Sources */,
+				A85975CA25F29BD70095178E /* OneLine.swift in Sources */,
 				A85975BC25F295700095178E /* FileChanged.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -277,6 +282,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A85975CB25F29BD70095178E /* OneLine.swift in Sources */,
 				A85975BD25F295700095178E /* FileChanged.swift in Sources */,
 				A859759D25F291550095178E /* GitPRDiffTests.swift in Sources */,
 			);

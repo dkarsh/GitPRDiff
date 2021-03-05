@@ -24,7 +24,9 @@ struct ContentView: View {
             if let data = data {
             let str = String(decoding: data, as: UTF8.self)
             let myStrings = str.components(separatedBy: .newlines)
-            print(str)
+                for line in myStrings {
+                    
+                }
             }
         }.resume()
         
