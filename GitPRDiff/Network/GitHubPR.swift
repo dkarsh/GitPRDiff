@@ -19,7 +19,7 @@ enum GitHubPR {
 
 enum APIPath {
     case reposPullRequest
-    case reposPullRequesNumber(String)
+    case reposPullRequesNumber(Int)
     
     var url:String {
         switch self {
@@ -41,7 +41,7 @@ enum APIPath {
 }
 
 extension GitHubPR {
-    static func request(_ path: APIPath) -> AnyPublisher<[PullRequest], Error> {
+    static func request<T:Decodable>(_ path: APIPath) -> AnyPublisher<T, Error> {
         guard let components = URLComponents(url: baseUrl.appendingPathComponent(path.url), resolvingAgainstBaseURL: true)
             else { fatalError("Couldn't create URLComponents") }
         var request = URLRequest(url: components.url!)

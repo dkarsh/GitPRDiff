@@ -24,7 +24,7 @@ struct GithubView: View {
                 }
             }.navigationBarTitle("Github Pull Requests")
             .navigationViewStyle(StackNavigationViewStyle())
-        }
+        }.environmentObject(viewModel)
     }
     
    

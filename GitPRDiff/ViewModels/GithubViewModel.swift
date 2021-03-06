@@ -11,19 +11,25 @@ import Combine
 class GithubViewModel: ObservableObject {
     
     @Published var pulls: [PullRequest] = []
-    @Published var filesOnPr: [FileChanged] = []
+    @Published var files: [FileChanged] = []
+    
+    var stringResponse:String = "" {
+        didSet{
+            files = FileChanged.parseStringsToFiles(stringResponse)
+        }
+    }
     
     var cancellationToken: AnyCancellable?
     
     init() {
         getPulls()
     }
-    
 }
 
 extension GithubViewModel {
     
     // Subscriber implementation
+    
     func getPulls() {
         cancellationToken = GitHubPR.request(.reposPullRequest) // 4
             .mapError({ (error) -> Error in
@@ -33,24 +39,19 @@ extension GithubViewModel {
             .sink(receiveCompletion: { _ in },
                   receiveValue: {
                     self.pulls = $0
-            })
+                  })
     }
     
     func getPullNumber(_ n:Int) {
-        cancellationToken = GitHubPR.request(.reposPullRequest) // 4
+        cancellationToken = GitHubPR.request(.reposPullRequesNumber(n)) // 4
             .mapError({ (error) -> Error in
                 print(error)
                 return error
             })
             .sink(receiveCompletion: { _ in },
                   receiveValue: {
-                    self.pulls = $0
-            })
-//        let url = URL(string: "https://api.github.com/repos/magicalpanda/MagicalRecord/pulls/1293")!
-//        var request = URLRequest(url: url)
-//        request.setValue("keep-alive", forHTTPHeaderField: "Connection")
-//        request.setValue("application/vnd.github.VERSION.diff", forHTTPHeaderField: "Accept")
-//        request.httpMethod = "GET"
+                    self.stringResponse = $0
+                  })
     }
     
 }

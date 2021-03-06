@@ -19,8 +19,11 @@ struct APIClient {
         return URLSession.shared
             .dataTaskPublisher(for: request)
             .tryMap { result -> Response<T> in
-                let value = try JSONDecoder().decode(T.self, from: result.data)
-                return Response(value: value, response: result.response)
+                if let json = try? JSONDecoder().decode(T.self, from: result.data){
+                    return Response(value: json, response: result.response)
+                }
+                let value = String(decoding: result.data, as: UTF8.self)
+                return Response(value: value as! T, response: result.response)
             }
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()

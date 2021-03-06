@@ -11,21 +11,17 @@ struct GithubPRView: View {
     
     @EnvironmentObject var viewModel:GithubViewModel
     
-    var prNumber:Int {
-        didSet{
-            viewModel.getPullNumber(prNumber)
-        }
-    }
-    
+    var prNumber:Int
     
     var body: some View {
-        List(viewModel.pulls) { pr in
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-            .onAppear(perform: screenRotate)
-        }
+        List(viewModel.files) { pr in
+            Text(String(pr.chuncks.count))
+            
+        }.onAppear(perform: screenRotate)
     }
-    
+
     func screenRotate() {
+        viewModel.getPullNumber(prNumber)
         UIDevice.current.setValue(UIInterfaceOrientation.landscapeLeft.rawValue, forKey: "orientation")
         UIViewController.attemptRotationToDeviceOrientation()
     }

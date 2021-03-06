@@ -21,6 +21,17 @@ struct FileChanged: Codable, Identifiable  {
      
         title = ""
     }
+    
+    // https://stackoverflow.com/questions/33830047/arrayslice-in-array-swift
+    
+    static func parseStringsToFiles(_ s:String) -> [FileChanged] {
+        let myStrings = s.components(separatedBy: .newlines)
+        let formatedLines = myStrings.enumerated().map { OneLine($1,id:$0) }
+        let cleanDiffandIndexLines = formatedLines.filter{$0.type != .diff}.filter{$0.type != .index}
+        let splitIntoFiles = cleanDiffandIndexLines.split { $0.type == .aFileName }
+        let filesArray = splitIntoFiles.map{Array($0)}
+        return filesArray.map{FileChanged(fileLines: $0,id:1)}
+    }
 }
 
 
