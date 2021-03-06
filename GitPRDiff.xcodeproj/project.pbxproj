@@ -20,6 +20,16 @@
 		A85975CB25F29BD70095178E /* OneLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975C925F29BD70095178E /* OneLine.swift */; };
 		A85975D025F2AFA70095178E /* ChunckChanged.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975CF25F2AFA70095178E /* ChunckChanged.swift */; };
 		A85975D125F2AFA70095178E /* ChunckChanged.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975CF25F2AFA70095178E /* ChunckChanged.swift */; };
+		A85975DE25F3D78D0095178E /* GitHubPR.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975DD25F3D78D0095178E /* GitHubPR.swift */; };
+		A85975DF25F3D78D0095178E /* GitHubPR.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975DD25F3D78D0095178E /* GitHubPR.swift */; };
+		A85975E425F3D7B50095178E /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975E325F3D7B50095178E /* APIClient.swift */; };
+		A85975E525F3D7B50095178E /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975E325F3D7B50095178E /* APIClient.swift */; };
+		A85975FA25F3DE880095178E /* GithubViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975F925F3DE880095178E /* GithubViewModel.swift */; };
+		A85975FB25F3DE880095178E /* GithubViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85975F925F3DE880095178E /* GithubViewModel.swift */; };
+		A859760125F3DEFE0095178E /* PullRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A859760025F3DEFE0095178E /* PullRequest.swift */; };
+		A859760225F3DEFE0095178E /* PullRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A859760025F3DEFE0095178E /* PullRequest.swift */; };
+		A859761125F3E5290095178E /* GithubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A859761025F3E5290095178E /* GithubView.swift */; };
+		A859761225F3E5290095178E /* GithubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A859761025F3E5290095178E /* GithubView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,6 +66,11 @@
 		A85975C125F299C10095178E /* PRDataRespond.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = PRDataRespond.txt; sourceTree = "<group>"; };
 		A85975C925F29BD70095178E /* OneLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OneLine.swift; sourceTree = "<group>"; };
 		A85975CF25F2AFA70095178E /* ChunckChanged.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChunckChanged.swift; sourceTree = "<group>"; };
+		A85975DD25F3D78D0095178E /* GitHubPR.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubPR.swift; sourceTree = "<group>"; };
+		A85975E325F3D7B50095178E /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		A85975F925F3DE880095178E /* GithubViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GithubViewModel.swift; sourceTree = "<group>"; };
+		A859760025F3DEFE0095178E /* PullRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PullRequest.swift; sourceTree = "<group>"; };
+		A859761025F3E5290095178E /* GithubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GithubView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,6 +123,10 @@
 			children = (
 				A859758A25F291540095178E /* GitPRDiffApp.swift */,
 				A859758C25F291540095178E /* ContentView.swift */,
+				A859761725F3E5410095178E /* Views */,
+				A859760925F3E5000095178E /* ViewModels */,
+				A85975FF25F3DEE50095178E /* Models */,
+				A85975F225F3D8870095178E /* Network */,
 				A85975BB25F295700095178E /* FileChanged.swift */,
 				A85975CF25F2AFA70095178E /* ChunckChanged.swift */,
 				A85975C925F29BD70095178E /* OneLine.swift */,
@@ -143,6 +162,39 @@
 				A85975A925F291560095178E /* Info.plist */,
 			);
 			path = GitPRDiffUITests;
+			sourceTree = "<group>";
+		};
+		A85975F225F3D8870095178E /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				A85975DD25F3D78D0095178E /* GitHubPR.swift */,
+				A85975E325F3D7B50095178E /* APIClient.swift */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
+		A85975FF25F3DEE50095178E /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A859760025F3DEFE0095178E /* PullRequest.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A859760925F3E5000095178E /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				A85975F925F3DE880095178E /* GithubViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		A859761725F3E5410095178E /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A859761025F3E5290095178E /* GithubView.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -277,9 +329,14 @@
 			files = (
 				A859758D25F291540095178E /* ContentView.swift in Sources */,
 				A859758B25F291540095178E /* GitPRDiffApp.swift in Sources */,
+				A85975DE25F3D78D0095178E /* GitHubPR.swift in Sources */,
+				A85975E425F3D7B50095178E /* APIClient.swift in Sources */,
 				A85975D025F2AFA70095178E /* ChunckChanged.swift in Sources */,
+				A859761125F3E5290095178E /* GithubView.swift in Sources */,
 				A85975CA25F29BD70095178E /* OneLine.swift in Sources */,
+				A859760125F3DEFE0095178E /* PullRequest.swift in Sources */,
 				A85975BC25F295700095178E /* FileChanged.swift in Sources */,
+				A85975FA25F3DE880095178E /* GithubViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -287,10 +344,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A85975DF25F3D78D0095178E /* GitHubPR.swift in Sources */,
 				A85975D125F2AFA70095178E /* ChunckChanged.swift in Sources */,
+				A859760225F3DEFE0095178E /* PullRequest.swift in Sources */,
+				A85975FB25F3DE880095178E /* GithubViewModel.swift in Sources */,
 				A85975CB25F29BD70095178E /* OneLine.swift in Sources */,
 				A85975BD25F295700095178E /* FileChanged.swift in Sources */,
+				A85975E525F3D7B50095178E /* APIClient.swift in Sources */,
 				A859759D25F291550095178E /* GitPRDiffTests.swift in Sources */,
+				A859761225F3E5290095178E /* GithubView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
