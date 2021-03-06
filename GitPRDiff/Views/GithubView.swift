@@ -15,9 +15,11 @@ struct GithubView: View {
         List(viewModel.pulls) { pr in
             HStack {
                 VStack(alignment: .leading) {
+                    
                     Text(pr.title)
                         .font(.headline)
-                    Text(pr.url)
+                    
+                    Text(pr.subTitle)
                         .font(.subheadline)
                 }
             }
