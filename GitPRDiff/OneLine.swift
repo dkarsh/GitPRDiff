@@ -5,15 +5,17 @@
 //  Created by Daniel Karsh on 3/5/21.
 //
 
+// https://stackoverflow.com/questions/2529441/how-to-read-the-output-from-git-diff
+
 import Foundation
 
 enum LineType:String {
-    case diff = "diff"
-    case index = "index"
-    case diffInfo = "@@"
+    case diff = "d"
+    case index = "i"
+    case diffInfo = "@"
     case aFileName = "---"
     case bFileName = "+++"
-    case line = ""
+    case line = " "
     case deleteLine = "-"
     case addLine = "+"
     
@@ -31,7 +33,7 @@ enum LineType:String {
         case .bFileName:
             return "+++ b/"
         case .line:
-            return ""
+            return " "
         case .deleteLine:
             return "-"
         case .addLine:
@@ -51,7 +53,13 @@ struct OneLine {
     var id:Int
     
     init(_ raw:String, id:Int) {
-        self.type = LineType(rawValue:String(raw.split(separator: " ").first ?? "")) ?? .line
+        if raw.hasPrefix(LineType.aFileName.rawValue) {
+            self.type = .aFileName
+        }else if raw.hasPrefix(LineType.bFileName.rawValue){
+            self.type = .bFileName
+        }else{
+            self.type = LineType(rawValue:String(raw.first ?? " ")) ?? .line
+        }
         self.text = raw
         self.id = id
     }

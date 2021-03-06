@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+
+
 struct ContentView: View {
     
     func loadData() {
@@ -24,9 +26,18 @@ struct ContentView: View {
             if let data = data {
             let str = String(decoding: data, as: UTF8.self)
             let myStrings = str.components(separatedBy: .newlines)
-            let formatedLines = myStrings.enumerated().map { OneLine($1,id:$0) }
-            let linesType = formatedLines.map{$0.type}
-                print(linesType)
+                let formatedLines = myStrings.enumerated().map { OneLine($1,id:$0) }
+                let cleanDiffandIndexLines = formatedLines.filter{$0.type != .diff}.filter{$0.type != .index}
+                let splitIntoFiles = cleanDiffandIndexLines.split { $0.type == .aFileName }
+                // https://stackoverflow.com/questions/33830047/arrayslice-in-array-swift
+                let filesArray = splitIntoFiles.map{Array($0)}
+                let files = filesArray.map{FileChanged(fileLines: $0,id:1)}
+                
+                print(splitIntoFiles)
+//            let linesType = formatedLines.map{$0.type}
+                
+                
+                
              
             }
         }.resume()
