@@ -17,7 +17,7 @@ struct PullRequest: Codable, Identifiable {
     let created_at:String
     
     var hashNumber: String {
-       return "#\(String(number)) "
+        return "#\(String(number)) "
     }
     
     var openOn: String {
@@ -28,13 +28,12 @@ struct PullRequest: Codable, Identifiable {
         if let date = formatter.date(from: created_at) {
             return "opened on \(formatter2.string(from: date))"
         }
-       return ""
+        return ""
     }
     
     var subTitle: String {
         return hashNumber + openOn + " by " + user.login
     }
-    
 }
 
 struct User: Codable, Identifiable {

@@ -9,22 +9,25 @@ import SwiftUI
 
 struct GithubView: View {
     
-    @ObservedObject var viewModel = GithubViewModel()
+    @StateObject var viewModel = GithubViewModel()
     
     var body: some View {
-        List(viewModel.pulls) { pr in
-            HStack {
-                VStack(alignment: .leading) {
-                    
-                    Text(pr.title)
-                        .font(.headline)
-                    
-                    Text(pr.subTitle)
-                        .font(.subheadline)
+        NavigationView {
+            List(viewModel.pulls) { pr in
+                NavigationLink(destination: GithubPRView(prNumber:pr.number)) {
+                    VStack(alignment: .leading) {
+                        Text(pr.title)
+                            .font(.headline)
+                        Text(pr.subTitle)
+                            .font(.subheadline)
+                    }
                 }
-            }
+            }.navigationBarTitle("Github Pull Requests")
+            .navigationViewStyle(StackNavigationViewStyle())
         }
     }
+    
+   
 }
 
 struct GithubView_Previews: PreviewProvider {

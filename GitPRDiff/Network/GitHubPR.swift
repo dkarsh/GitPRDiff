@@ -17,15 +17,37 @@ enum GitHubPR {
 }
 
 
-enum APIPath: String {
-    case reposPullRequest = "repos/magicalpanda/MagicalRecord/pulls"
+enum APIPath {
+    case reposPullRequest
+    case reposPullRequesNumber(String)
+    
+    var url:String {
+        switch self {
+        case .reposPullRequest:
+            return "repos/magicalpanda/MagicalRecord/pulls"
+        case .reposPullRequesNumber(let number):
+            return "repos/magicalpanda/MagicalRecord/pulls/\(number)"
+        }
+    }
+    
+    var params:KeyValuePairs<String,String>{
+        switch self {
+        case .reposPullRequest:
+            return [:]
+        case .reposPullRequesNumber(_):
+            return ["Accept":"application/vnd.github.VERSION.diff"]
+        }
+    }
 }
 
 extension GitHubPR {
     static func request(_ path: APIPath) -> AnyPublisher<[PullRequest], Error> {
-        guard let components = URLComponents(url: baseUrl.appendingPathComponent(path.rawValue), resolvingAgainstBaseURL: true)
+        guard let components = URLComponents(url: baseUrl.appendingPathComponent(path.url), resolvingAgainstBaseURL: true)
             else { fatalError("Couldn't create URLComponents") }
-        let request = URLRequest(url: components.url!)
+        var request = URLRequest(url: components.url!)
+        for params in path.params {
+            request.setValue(params.1, forHTTPHeaderField: params.0)
+        }
         return apiClient.run(request)
             .map(\.value)
             .eraseToAnyPublisher()

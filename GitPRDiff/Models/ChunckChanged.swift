@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ChunckChanged {
+struct ChunckChanged: Codable, Identifiable  {
     var id:Int
     var title = ""
     var aSide = [OneLine]()

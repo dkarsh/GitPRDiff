@@ -9,7 +9,7 @@
 
 import Foundation
 
-enum LineType:String {
+enum LineType:String,Codable {
     case diff = "d"
     case index = "i"
     case diffInfo = "@"
@@ -40,17 +40,14 @@ enum LineType:String {
             return "+"
         }
     }
-    
-//    func cleanText(_ str:String) -> String {
-//        if self == .
-//        return String(str.dropFirst(self.removeString.count))
-//    }
 }
 
-struct OneLine {
-    var text:String
-    var type:LineType
-    var id:Int
+struct OneLine: Codable, Identifiable {
+    
+    let id:Int
+    let text:String
+    let type:LineType
+
     
     init(_ raw:String, id:Int) {
         if raw.hasPrefix(LineType.aFileName.rawValue) {
