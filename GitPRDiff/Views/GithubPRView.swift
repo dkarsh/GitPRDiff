@@ -9,23 +9,65 @@ import SwiftUI
 
 struct GithubPRView: View {
     
-    @EnvironmentObject var viewModel:GithubViewModel
+    @StateObject var viewModel = GithubViewModel()
     
-    var prNumber:Int
+    var prNumber:Int {
+        didSet {
+            viewModel.diffList = nil
+        }
+    }
     
     var body: some View {
-        List(viewModel.files) { pr in
-            Text(String(pr.chuncks.count))
-            
-        }.onAppear(perform: screenRotate)
+        VStack{
+            viewModel.diffList.map{theList($0)}
+        }
+        .onAppear(perform: getPullRequest)
+        .onAppear(perform: landscapeLeft)
+        .onDisappear(perform: portrait)
     }
-
-    func screenRotate() {
+    
+    
+    func theList(_ list:DiffList) -> some View {
+        return
+            ScrollView{
+                LazyVStack {
+                    ForEach(0..<list.aSide.count){ i in
+                        HStack{
+                            
+                            let lineA = list.aSide[i]
+                            let lineB = list.bSide[i]
+                            
+                            if lineA.type == .bFileName {
+                                TextSideView(line:lineA)
+                                    .padding(.vertical,10)
+                            }else if lineA.type == .diffInfo {
+                                TextSideView(line:lineA)
+                            }else{
+                                TextSideView(line:lineA)
+                                TextSideView(line:lineB)
+                            }
+                        }
+                    }
+                }
+            }
+    }
+    
+    func getPullRequest() {
         viewModel.getPullNumber(prNumber)
+    }
+    
+    func landscapeLeft(){
+        AppDelegate.orientationLock = UIInterfaceOrientationMask.landscapeLeft
         UIDevice.current.setValue(UIInterfaceOrientation.landscapeLeft.rawValue, forKey: "orientation")
         UIViewController.attemptRotationToDeviceOrientation()
     }
-
+    
+    func portrait(){
+        AppDelegate.orientationLock = UIInterfaceOrientationMask.portrait
+        UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+        UIViewController.attemptRotationToDeviceOrientation()
+    }
+    
 }
 
 struct GithubPRView_Previews: PreviewProvider {

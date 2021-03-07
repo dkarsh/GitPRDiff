@@ -11,11 +11,11 @@ import Combine
 class GithubViewModel: ObservableObject {
     
     @Published var pulls: [PullRequest] = []
-    @Published var files: [FileChanged] = []
+    @Published var diffList: DiffList? = nil
     
     var stringResponse:String = "" {
         didSet{
-            files = FileChanged.parseStringsToFiles(stringResponse)
+            diffList = DiffList.parseStringsToDiffList(stringResponse)
         }
     }
     

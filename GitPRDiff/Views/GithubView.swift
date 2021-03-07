@@ -22,12 +22,14 @@ struct GithubView: View {
                             .font(.subheadline)
                     }
                 }
-            }.navigationBarTitle("Github Pull Requests")
-            .navigationViewStyle(StackNavigationViewStyle())
-        }.environmentObject(viewModel)
+            } .navigationBarTitle("Github Pull Requests", displayMode: .inline)
+        }
+        .navigationViewStyle(StackNavigationViewStyle())
     }
     
-   
+
+    
+    
 }
 
 struct GithubView_Previews: PreviewProvider {

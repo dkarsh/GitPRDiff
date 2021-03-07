@@ -9,6 +9,7 @@
 
 import Foundation
 
+
 enum LineType:String,Codable {
     case diff = "d"
     case index = "i"
@@ -48,7 +49,6 @@ struct OneLine: Codable, Identifiable {
     let text:String
     let type:LineType
 
-    
     init(_ raw:String, id:Int) {
         if raw.hasPrefix(LineType.aFileName.rawValue) {
             self.type = .aFileName
