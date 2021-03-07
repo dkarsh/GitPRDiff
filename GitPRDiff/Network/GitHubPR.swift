@@ -30,7 +30,7 @@ enum APIPath {
         }
     }
     
-    var params:KeyValuePairs<String,String>{
+    var headers:KeyValuePairs<String,String>{
         switch self {
         case .reposPullRequest:
             return [:]
@@ -38,16 +38,31 @@ enum APIPath {
             return ["Accept":"application/vnd.github.VERSION.diff"]
         }
     }
+    
+    var parameters:KeyValuePairs<String,String>{
+        switch self {
+        case .reposPullRequest:
+            return ["state":"open"]
+        case .reposPullRequesNumber(_):
+            return [:]
+        }
+    }
 }
 
 extension GitHubPR {
     static func request<T:Decodable>(_ path: APIPath) -> AnyPublisher<T, Error> {
-        guard let components = URLComponents(url: baseUrl.appendingPathComponent(path.url), resolvingAgainstBaseURL: true)
+        guard var components = URLComponents(url: baseUrl.appendingPathComponent(path.url), resolvingAgainstBaseURL: true)
             else { fatalError("Couldn't create URLComponents") }
-        var request = URLRequest(url: components.url!)
-        for params in path.params {
-            request.setValue(params.1, forHTTPHeaderField: params.0)
+        var queryItems = [URLQueryItem]()
+        for param in path.parameters {
+            queryItems.append(URLQueryItem(name: param.key, value:param.value))
         }
+        components.queryItems = queryItems
+        var request = URLRequest(url: components.url!)
+        for header in path.headers {
+            request.setValue(header.1, forHTTPHeaderField: header.0)
+        }
+       
         return apiClient.run(request)
             .map(\.value)
             .eraseToAnyPublisher()
